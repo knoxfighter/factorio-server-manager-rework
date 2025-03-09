@@ -1,0 +1,12 @@
+#header {
+    background-color: rgba(0, 0, 0, 0.5);
+    display: grid;
+    grid-template-columns: inherit;
+    grid-column: 1/-1;
+
+    > img {
+        height: 100%;
+        grid-column-start: 2;
+        justify-self: start;
+    }
+}

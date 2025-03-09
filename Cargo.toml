@@ -1,0 +1,44 @@
+[package]
+name = "factorio-manager"
+version = "0.1.0"
+authors = ["knox <knoxfighter@asdff45.de>"]
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+dioxus = { version = "0.6.3", features = ["router", "fullstack"] }
+dioxus-fullstack = "0.6.3"
+
+# has to be optional so it is server only
+axum = { version = "0.7.9", optional = true}
+tokio = { version = "1.43.0", features = ["full"], optional = true}
+dotenvy = { version = "0.15.7", optional = true}
+diesel = { version = "2.2.8", features = ["sqlite"], optional = true}
+libsqlite3-sys = { version = "0.31.0", features = ["bundled"], optional = true}
+
+[features]
+default = ["web"]
+web = ["dioxus/web"]
+desktop = ["dioxus/desktop"]
+mobile = ["dioxus/mobile"]
+server = [
+    "dioxus/server",
+    "axum",
+    "tokio",
+    "dotenvy",
+    "diesel",
+    "libsqlite3-sys"
+]
+
+[profile]
+
+[profile.wasm-dev]
+inherits = "dev"
+opt-level = 1
+
+[profile.server-dev]
+inherits = "dev"
+
+[profile.android-dev]
+inherits = "dev"
