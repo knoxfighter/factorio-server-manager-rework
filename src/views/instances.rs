@@ -7,33 +7,24 @@ pub fn Instances() -> Element {
     let mut items = use_signal(|| vec!["Instance1", "Instance2", "Instance3"]);
 
     rsx! {
-        document::Link { rel: "stylesheet", href: INSTANCES_CSS },
+        document::Link { rel: "stylesheet", href: INSTANCES_CSS }
 
-        div {
-            id: "instances",
+        div { id: "instances",
 
-            div {
-                class: "list",
+            div { class: "list",
 
                 ul {
                     for item in items.iter() {
-                        li {
-                            "{item}"
-                        }
+                        li { "{item}" }
                     }
                 }
             }
 
-            div {
-                class: "controls",
+            div { class: "controls",
 
                 ul {
-                    li {
-                        "New Instance"
-                    }
-                    li {
-                        "Settings"
-                    }
+                    li { "New Instance" }
+                    li { "Settings" }
                 }
             }
         }

@@ -8,12 +8,9 @@ pub fn Header() -> Element {
     rsx! {
         document::Link { rel: "stylesheet", href: HEADER }
 
-        div {
-            id: "header",
+        div { id: "header",
 
-            img {
-                src: ICON
-            }
+            img { src: ICON }
         }
     }
 }

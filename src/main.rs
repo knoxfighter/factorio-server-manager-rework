@@ -1,11 +1,12 @@
 use dioxus::prelude::*;
 
 mod components;
-mod views;
 mod layouts;
+mod views;
 
 #[cfg(feature = "server")]
 mod backend;
+mod error;
 
 use layouts::Home;
 
@@ -27,7 +28,6 @@ const NORMALIZE: Asset = asset!("/assets/styling/normalize.css");
 fn main() {
     dioxus::launch(App);
 }
-
 
 #[cfg(feature = "server")]
 #[tokio::main]

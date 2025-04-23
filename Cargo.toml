@@ -14,8 +14,18 @@ dioxus-fullstack = "0.6.3"
 axum = { version = "0.7.9", optional = true}
 tokio = { version = "1.43.0", features = ["full"], optional = true}
 dotenvy = { version = "0.15.7", optional = true}
-diesel = { version = "2.2.8", features = ["sqlite"], optional = true}
+diesel = { version = "2.2.8", features = ["sqlite", "returning_clauses_for_sqlite_3_35"], optional = true}
+diesel-async = { version = "0.5.2", features = ["tokio", "sqlite", "sync-connection-wrapper", "bb8", "async-connection-wrapper"], optional = true }
 libsqlite3-sys = { version = "0.31.0", features = ["bundled"], optional = true}
+tower = { version = "0.5.2", features = ["tokio"], optional = true}
+tower-http = { version = "0.6.2", features = ["auth", "tokio"], optional = true}
+tower-sessions = { version = "0.13.0", features = ["signed"], optional = true }
+tower-sessions-core = { version = "0.13.0", features = ["deletion-task"], optional = true }
+time = { version = "0.3.39", optional = true }
+argon2 = { version = "0.6.0-pre.1", features = ["default", "std"], optional = true }
+uuid = { version = "1.14.0", features = ["v4"], optional = true}
+thiserror = { version = "2.0.12"}
+serde = { version = "1.0.218", features = ["derive"] }
 
 [features]
 default = ["web"]
@@ -28,7 +38,15 @@ server = [
     "tokio",
     "dotenvy",
     "diesel",
-    "libsqlite3-sys"
+    "diesel-async",
+    "libsqlite3-sys",
+    "tower",
+    "tower-http",
+    "tower-sessions",
+    "tower-sessions-core",
+    "time",
+    "argon2",
+    "uuid",
 ]
 
 [profile]

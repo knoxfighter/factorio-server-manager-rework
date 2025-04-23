@@ -1,31 +1,73 @@
-use std::env;
+use crate::App;
+use axum::extract::FromRequestParts;
+use axum::Extension;
 use diesel::SqliteConnection;
+use diesel_async::pooled_connection::bb8::{Pool, PooledConnection};
+use diesel_async::pooled_connection::AsyncDieselConnectionManager;
+use diesel_async::sync_connection_wrapper::SyncConnectionWrapper;
 use dioxus_fullstack::prelude::DioxusRouterExt;
 use dioxus_fullstack::ServeConfig;
-use crate::{App};
+use serde::Serialize;
+use std::env;
+use time::Duration;
+use tower::ServiceBuilder;
+use tower_sessions::{MemoryStore, SessionManagerLayer};
+use tower_sessions_core::Expiry;
 
+pub mod error;
 pub mod models;
 pub mod schema;
+
+pub type DbPool = Pool<SyncConnectionWrapper<SqliteConnection>>;
+pub type DbPoolConnection<'a> =
+    PooledConnection<'a, AsyncDieselConnectionManager<SyncConnectionWrapper<SqliteConnection>>>;
+#[derive(Clone)]
+pub struct AppState {
+    pub db: DbPool,
+}
 
 pub async fn launch() {
     dioxus::logger::initialize_default();
 
-    let connection = establish_db_connection();
+    let pool = establish_db_connection().await;
+
+    let session_store = MemoryStore::default();
+
+    // tokio::task::spawn(
+    //     session_store
+    //         .clone()
+    //         .continuously_delete_expired(tokio::time::Duration::from_secs(60)),
+    // );
+
+    let key = tower_sessions::cookie::Key::generate();
+    let session_manager = SessionManagerLayer::new(session_store)
+        .with_secure(false)
+        .with_expiry(Expiry::OnInactivity(Duration::days(1)))
+        .with_signed(key);
 
     let addr = dioxus::cli_config::fullstack_address_or_localhost();
 
-    let app = axum::Router::new().serve_dioxus_application(ServeConfig::new().unwrap(), App).into_make_service();
+    let state = AppState { db: pool };
+
+    let app = axum::Router::new()
+        .serve_dioxus_application(ServeConfig::new().unwrap(), App)
+        .layer(
+            ServiceBuilder::new()
+                .layer(session_manager)
+                .layer(Extension(state)),
+        );
 
     let listener = tokio::net::TcpListener::bind(&addr).await.unwrap();
     axum::serve(listener, app).await.unwrap();
 }
 
-fn establish_db_connection() -> SqliteConnection {
-    use diesel::Connection;
-
+async fn establish_db_connection() -> DbPool {
     dotenvy::dotenv().ok();
 
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-    SqliteConnection::establish(&database_url)
-        .unwrap_or_else(|_| panic!("Error connecting to {}", database_url))
+
+    let manager =
+        AsyncDieselConnectionManager::<SyncConnectionWrapper<SqliteConnection>>::new(&database_url);
+    let pool: DbPool = Pool::builder().build(manager).await.unwrap();
+    pool
 }
