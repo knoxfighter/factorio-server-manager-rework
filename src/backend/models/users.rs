@@ -1,7 +1,7 @@
 use crate::backend::schema::users;
 use diesel::ExpressionMethods;
 
-use crate::backend::error::ServerError;
+use crate::backend::error::BackendError;
 use crate::backend::{AppState, DbPool};
 use argon2::password_hash::rand_core::OsRng;
 use argon2::password_hash::SaltString;
@@ -26,7 +26,7 @@ struct LoginUser {
 }
 
 impl LoginUser {
-    pub fn verify_password(&self, password: impl AsRef<str>) -> Result<(), ServerError> {
+    pub fn verify_password(&self, password: impl AsRef<str>) -> Result<(), BackendError> {
         Argon2::default().verify_password(
             password.as_ref().as_bytes(),
             &PasswordHash::new(&self.password)?,
@@ -53,7 +53,7 @@ pub struct User {
 }
 
 impl User {
-    pub async fn get_by_uuid(db: &DbPool, user_id: &str) -> Result<Self, ServerError> {
+    pub async fn get_by_uuid(db: &DbPool, user_id: &str) -> Result<Self, BackendError> {
         let mut conn = db.get().await?;
 
         let r = users::table
@@ -69,7 +69,7 @@ impl User {
         db: &DbPool,
         username: impl AsRef<str>,
         password: impl AsRef<str>,
-    ) -> Result<Self, ServerError> {
+    ) -> Result<Self, BackendError> {
         let mut conn = db.get().await?;
 
         let salt = SaltString::generate(&mut OsRng);
@@ -96,7 +96,7 @@ impl User {
         db: &DbPool,
         username: impl AsRef<str>,
         password: impl AsRef<str>,
-    ) -> Result<Self, ServerError> {
+    ) -> Result<Self, BackendError> {
         let mut conn = db.get().await?;
 
         let user: LoginUser = users::table
