@@ -1,2 +1,5 @@
-mod home;
-pub use home::Home;
+mod main;
+mod root;
+
+pub use main::MainLayout;
+pub use root::RootLayout;

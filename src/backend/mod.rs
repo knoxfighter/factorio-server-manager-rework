@@ -1,13 +1,12 @@
+use crate::backend::models::users::User;
 use crate::App;
-use axum::extract::FromRequestParts;
 use axum::Extension;
 use diesel::SqliteConnection;
 use diesel_async::pooled_connection::bb8::{Pool, PooledConnection};
 use diesel_async::pooled_connection::AsyncDieselConnectionManager;
 use diesel_async::sync_connection_wrapper::SyncConnectionWrapper;
-use dioxus_fullstack::prelude::DioxusRouterExt;
+use dioxus::prelude::DioxusRouterExt;
 use dioxus_fullstack::ServeConfig;
-use serde::Serialize;
 use std::env;
 use time::Duration;
 use tower::ServiceBuilder;
@@ -28,8 +27,12 @@ pub struct AppState {
 
 pub async fn launch() {
     dioxus::logger::initialize_default();
+    // let _ = dioxus::logger::init(Level::TRACE);
 
     let pool = establish_db_connection().await;
+
+    // assure that at least one user exists
+    User::assure_default_user(&pool).await.unwrap();
 
     let session_store = MemoryStore::default();
 
@@ -53,8 +56,8 @@ pub async fn launch() {
         .serve_dioxus_application(ServeConfig::new().unwrap(), App)
         .layer(
             ServiceBuilder::new()
-                .layer(session_manager)
-                .layer(Extension(state)),
+                .layer(Extension(state))
+                .layer(session_manager),
         );
 
     let listener = tokio::net::TcpListener::bind(&addr).await.unwrap();

@@ -1,7 +1,5 @@
-use crate::backend::schema::users;
-use diesel::ExpressionMethods;
-
 use crate::backend::error::BackendError;
+use crate::backend::schema::users;
 use crate::backend::{AppState, DbPool};
 use argon2::password_hash::rand_core::OsRng;
 use argon2::password_hash::SaltString;
@@ -9,10 +7,14 @@ use argon2::{Argon2, PasswordHash, PasswordHasher, PasswordVerifier};
 use axum::extract::FromRequestParts;
 use axum::http::request::Parts;
 use axum::http::StatusCode;
-use axum::{async_trait, Extension, RequestPartsExt};
+use axum::{Extension, RequestPartsExt};
 use diesel::QueryDsl;
+use diesel::{sql_query, ExpressionMethods};
 use diesel::{Queryable, QueryableByName, Selectable, SelectableHelper};
 use diesel_async::RunQueryDsl;
+use rand::distr::Alphanumeric;
+use rand::Rng;
+use std::backtrace::Backtrace;
 use tower_sessions_core::Session;
 use uuid::Uuid;
 
@@ -72,7 +74,7 @@ impl User {
     ) -> Result<Self, BackendError> {
         let mut conn = db.get().await?;
 
-        let salt = SaltString::generate(&mut OsRng);
+        let salt = SaltString::try_from_rng(&mut OsRng)?;
         let password = Argon2::default()
             .hash_password(password.as_ref().as_bytes(), &salt)?
             .to_string();
@@ -105,36 +107,72 @@ impl User {
             .first(&mut conn)
             .await?;
 
-        let t = user.verify_password(password)?;
+        user.verify_password(password)?;
 
         Ok(user.into())
+    }
+
+    pub(crate) async fn assure_default_user(db: &DbPool) -> Result<(), BackendError> {
+        let mut conn = db.get().await?;
+
+        #[derive(QueryableByName)]
+        struct UserExists {
+            #[sql_type = "diesel::sql_types::Bool"]
+            users_exist: bool,
+        }
+
+        let res: UserExists = sql_query("SELECT EXISTS(SELECT 1 FROM users) AS users_exist;")
+            .get_result(&mut conn)
+            .await?;
+
+        if res.users_exist {
+            return Ok(());
+        }
+
+        let password: String = rand::rng()
+            .sample_iter(&Alphanumeric)
+            .take(16)
+            .map(char::from)
+            .collect();
+
+        let user = Self::create(db, "admin", &password).await?;
+
+        println!(
+            "Created default user: \"{}\" with password: \"{}\"",
+            user.username, password
+        );
+
+        Ok(())
     }
 }
 
 pub const SESSION_USER_KEY: &str = "user";
 
-#[async_trait]
 impl<S> FromRequestParts<S> for User
 where
     S: Send + Sync,
 {
-    type Rejection = (StatusCode, &'static str);
+    // type Rejection = (StatusCode, &'static str);
+    type Rejection = BackendError;
 
+    // TODO: change to return proper BackendErrors
     async fn from_request_parts(parts: &mut Parts, state: &S) -> Result<Self, Self::Rejection> {
         let session = Session::from_request_parts(parts, state).await?;
         let user_id: String = session
             .get(SESSION_USER_KEY)
             .await
             .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "session not found"))?
-            .ok_or_else(|| (StatusCode::UNAUTHORIZED, "not logged in2"))?;
+            .ok_or_else(|| (StatusCode::UNAUTHORIZED, "not logged in"))?;
 
         let Extension(state) = parts
             .extract::<Extension<AppState>>()
             .await
             .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "extension state not set"))?;
 
-        Self::get_by_uuid(&state.db, &user_id)
+        let user = Self::get_by_uuid(&state.db, &user_id)
             .await
-            .map_err(|_| (StatusCode::UNAUTHORIZED, "user not found"))
+            .map_err(|_| (StatusCode::UNAUTHORIZED, "user not found"))?;
+
+        Ok(user)
     }
 }

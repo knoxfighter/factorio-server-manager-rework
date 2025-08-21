@@ -1,4 +1,7 @@
+use crate::components::Echo;
+use crate::components::Login;
 use dioxus::prelude::*;
+use dioxus_primitives::toast::ToastProvider;
 
 mod components;
 mod layouts;
@@ -8,21 +11,22 @@ mod views;
 mod backend;
 mod error;
 
-use layouts::Home;
+use layouts::MainLayout;
+use layouts::RootLayout;
 
 #[derive(Debug, Clone, Routable, PartialEq)]
 #[rustfmt::skip]
 enum Route {
-    // #[layout(Navbar)]
-    #[route("/")]
-    Home {},
-    // #[route("/blog/:id")]
-    // Blog { id: i32 },
-}
+    #[layout(RootLayout)]
+        #[route("/login")]
+        Login {},
 
-const FAVICON: Asset = asset!("/assets/factorio-wheel.png");
-const MAIN_CSS: Asset = asset!("/assets/styling/main.css");
-const NORMALIZE: Asset = asset!("/assets/styling/normalize.css");
+        #[layout(MainLayout)]
+            #[route("/")]
+            Echo {},
+            // #[route("/blog/:id")]
+            // Blog { id: i32 },
+}
 
 #[cfg(not(feature = "server"))]
 fn main() {
@@ -37,14 +41,7 @@ async fn main() {
 
 #[component]
 fn App() -> Element {
-    // Build cool things ✌️
-
     rsx! {
-        // Global app resources
-        document::Link { rel: "icon", href: FAVICON }
-        document::Link { rel: "stylesheet", href: NORMALIZE }
-        document::Link { rel: "stylesheet", href: MAIN_CSS }
-
-        Router::<Route> {}
+        ToastProvider { Router::<Route> {} }
     }
 }

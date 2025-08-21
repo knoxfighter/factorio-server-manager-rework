@@ -2,7 +2,7 @@
 <project version="4">
   <component name="DataSourceManagerImpl" format="xml" multifile-model="true">
     <data-source source="LOCAL" name="database" uuid="077b63bc-4bf6-4e93-8d56-b3fb100f05ba">
-      <driver-ref>98a79ec3-24d1-4457-9232-7ea6f7b4d9f8</driver-ref>
+      <driver-ref>95d8fb60-2bc8-45ad-ba0e-979d09935b7f</driver-ref>
       <synchronize>true</synchronize>
       <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
       <jdbc-url>jdbc:sqlite:C:\Data\Development\rust\factorio-manager\target\database.db</jdbc-url>

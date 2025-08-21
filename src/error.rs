@@ -1,29 +1,22 @@
-use std::fmt::{Display, Formatter};
-use std::str::FromStr;
+use dioxus::logger::tracing;
+use dioxus::prelude::server_fn::codec::JsonEncoding;
+use dioxus::prelude::server_fn::error::{FromServerFnError, ServerFnErrorErr};
 use serde::{Deserialize, Serialize};
-use serde::ser::Error;
 
 #[derive(thiserror::Error, Debug, Clone, Serialize, Deserialize)]
 pub enum ServerError {
-    // #[error("test error: {0}")]
+    #[error("test error: {0}")]
     Test(String),
+
+    #[error("server fn error: {0}")]
+    ServerFnError(ServerFnErrorErr),
 }
 
-pub(crate) fn map_server_error(err: impl Into<ServerError>) -> ServerError {
-    err.into()
-}
+impl FromServerFnError for ServerError {
+    type Encoder = JsonEncoding;
 
-impl Display for ServerError {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        let s = serde_json::to_string(self).map_err(|e| std::fmt::Error::custom(e.to_string()))?;
-        write!(f, "{}", s)
-    }
-}
-
-impl FromStr for ServerError {
-    type Err = serde_json::error::Error;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        serde_json::from_str(s)
+    fn from_server_fn_error(value: ServerFnErrorErr) -> Self {
+        tracing::info!("from_server_fn_error: {:?}", value);
+        Self::ServerFnError(value)
     }
 }
