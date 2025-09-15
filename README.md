@@ -16,3 +16,6 @@ To run for a different platform, use the `--platform platform` flag. E.g.
 dx serve --platform desktop
 ```
 
+# Env Variables
+- `DATABASE_URL`: Url to connect with the database. We use sqlite, so this should be a path
+

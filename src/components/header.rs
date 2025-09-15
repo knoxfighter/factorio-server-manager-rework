@@ -10,7 +10,7 @@ const ICON: Asset = asset!("/assets/factorio-wheel.png");
 #[component]
 pub fn Header() -> Element {
     let nav = use_navigator();
-    let mut toast_api = use_toast();
+    let toast_api = use_toast();
 
     rsx! {
         document::Link { rel: "stylesheet", href: HEADER }
@@ -45,8 +45,7 @@ pub async fn logout() -> ServerFnResult {
     use crate::backend::models::users::SESSION_USER_KEY;
     use tower_sessions_core::Session;
 
-    let session: Session = extract().await.map_err(|e| BackendError::from(e))?;
-    tracing::info!("Logging out: {:?}", session);
+    let session: Session = extract().await.map_err(BackendError::from)?;
     session.remove::<String>(SESSION_USER_KEY).await?;
 
     Ok(())

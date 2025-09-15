@@ -1,5 +1,5 @@
-use crate::components::Header;
-use crate::views::Instances;
+use crate::components::header::Header;
+use crate::views::instances::Instances;
 use crate::Route;
 use dioxus::prelude::*;
 
@@ -10,7 +10,7 @@ pub fn MainLayout() -> Element {
     let login = use_server_future(check_login)?;
     let v = login.value();
     let v = v.unwrap();
-    if let Err(_) = v {
+    if v.is_err() {
         nav.push(Route::Login {});
     }
 
@@ -32,7 +32,7 @@ pub async fn check_login() -> ServerFnResult {
 }
 
 // #[server]
-// pub async fn create() -> Result<(), ServerError> {
+// pub async fn create() -> Result<(), ServerFnError> {
 //     use crate::backend::models::users::User;
 //     use crate::backend::AppState;
 //     use axum::Extension;

@@ -1,9 +1,4 @@
-mod navbar;
-
-mod echo;
-mod header;
-mod login;
-
-pub use echo::Echo;
-pub use header::Header;
-pub use login::Login;
+pub mod echo;
+pub mod header;
+pub mod login;
+pub mod navbar;

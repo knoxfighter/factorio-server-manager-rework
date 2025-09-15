@@ -1,2 +1,1 @@
-mod instances;
-pub use instances::Instances;
+pub mod instances;
