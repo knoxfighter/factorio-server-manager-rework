@@ -1,3 +1,4 @@
+use crate::backend::config::Config;
 use crate::backend::models::users::User;
 use crate::App;
 use axum::Extension;
@@ -10,21 +11,27 @@ use dioxus::logger::tracing::subscriber::set_global_default;
 use dioxus::logger::tracing::Level;
 use dioxus::prelude::DioxusRouterExt;
 use dioxus_fullstack::ServeConfig;
-use std::env;
+use factorio_server::manager::Manager;
+use std::sync::Arc;
 use time::Duration;
 use tower::ServiceBuilder;
 use tower_sessions::{MemoryStore, SessionManagerLayer};
 use tower_sessions_core::Expiry;
+
 pub mod error;
 pub mod models;
 pub mod schema;
+mod config;
 
 pub type DbPool = Pool<SyncConnectionWrapper<SqliteConnection>>;
 pub type DbPoolConnection<'a> =
     PooledConnection<'a, AsyncDieselConnectionManager<SyncConnectionWrapper<SqliteConnection>>>;
+
 #[derive(Clone)]
 pub struct AppState {
     pub db: DbPool,
+    pub config: Config,
+    pub manager: Arc<Manager>,
 }
 
 // This function is an adjusted function from dioxus
@@ -45,7 +52,7 @@ pub fn init(level: Level) -> Result<(), SetGlobalDefaultError> {
 }
 
 pub async fn launch() {
-    dotenvy::dotenv().unwrap();
+    dotenvy::dotenv().ok();
 
     if cfg!(debug_assertions) {
         _ = init(Level::DEBUG);
@@ -53,7 +60,9 @@ pub async fn launch() {
         _ = init(Level::INFO);
     }
 
-    let pool = establish_db_connection().await;
+    let config = Config::init().unwrap();
+
+    let pool = establish_db_connection(&config).await;
 
     // assure that at least one user exists
     User::assure_admin_user(&pool).await.unwrap();
@@ -73,7 +82,7 @@ pub async fn launch() {
 
     let addr = dioxus::cli_config::fullstack_address_or_localhost();
 
-    let state = AppState { db: pool };
+    let state = AppState { db: pool, manager: Arc::new(Manager::new(&config.manager_path).unwrap()), config };
 
     let app = axum::Router::new()
         .serve_dioxus_application(ServeConfig::new().unwrap(), App)
@@ -87,11 +96,9 @@ pub async fn launch() {
     axum::serve(listener, app).await.unwrap();
 }
 
-async fn establish_db_connection() -> DbPool {
-    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-
+async fn establish_db_connection(config: &Config) -> DbPool {
     let manager =
-        AsyncDieselConnectionManager::<SyncConnectionWrapper<SqliteConnection>>::new(&database_url);
+        AsyncDieselConnectionManager::<SyncConnectionWrapper<SqliteConnection>>::new(&config.database_file);
     let pool: DbPool = Pool::builder().build(manager).await.unwrap();
     pool
 }

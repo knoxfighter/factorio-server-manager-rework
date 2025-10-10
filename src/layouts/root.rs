@@ -5,9 +5,10 @@ use dioxus::prelude::*;
 use dioxus_primitives::toast::{use_toast, ToastOptions};
 
 static FAVICON: Asset = asset!("/assets/factorio-wheel.png");
+static NORMALIZE: Asset = asset!("/assets/styling/normalize.css");
 static MAIN_CSS: Asset = asset!("assets/styling/main.css");
 static TOAST_CSS: Asset = asset!("assets/styling/toast.css");
-static NORMALIZE: Asset = asset!("/assets/styling/normalize.css");
+static SELECT_CSS: Asset = asset!("assets/styling/select.css");
 
 #[component]
 pub fn RootLayout() -> Element {
@@ -19,6 +20,7 @@ pub fn RootLayout() -> Element {
         document::Stylesheet { href: NORMALIZE }
         document::Stylesheet { href: MAIN_CSS }
         document::Stylesheet { href: TOAST_CSS }
+        document::Stylesheet { href: SELECT_CSS }
 
         ErrorBoundary {
             handle_error: move |err: ErrorContext| {

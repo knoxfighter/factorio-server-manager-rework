@@ -1,5 +1,6 @@
 use crate::components::echo::Echo;
 use crate::components::login::Login;
+use crate::views::instances::new_instance::NewInstance;
 use dioxus::prelude::*;
 use dioxus_primitives::toast::ToastProvider;
 use layouts::main::MainLayout;
@@ -22,6 +23,9 @@ enum Route {
         #[layout(MainLayout)]
             #[route("/")]
             Echo {},
+
+            #[route("/instances/new")]
+             NewInstance {},
             // #[route("/blog/:id")]
             // Blog { id: i32 },
         // #[end_layout]

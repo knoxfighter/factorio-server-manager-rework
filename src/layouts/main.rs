@@ -1,5 +1,5 @@
 use crate::components::header::Header;
-use crate::views::instances::Instances;
+use crate::components::sidebar::Sidebar;
 use crate::Route;
 use dioxus::prelude::*;
 
@@ -17,7 +17,7 @@ pub fn MainLayout() -> Element {
     rsx! {
         Header {}
 
-        Instances {}
+        Sidebar {}
 
         Outlet::<Route> {}
     }

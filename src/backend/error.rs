@@ -7,6 +7,7 @@ use diesel_async::pooled_connection::bb8::RunError;
 use dioxus::logger::tracing;
 use thiserror::Error;
 
+// TODO: Adjust strings so they can be shown to the user
 #[derive(Error, Debug)]
 pub enum BackendError {
     #[error("Diesel error: {0}")]
@@ -32,6 +33,12 @@ pub enum BackendError {
 
     #[error("Session error: {0}")]
     SessionError(#[from] tower_sessions::session::Error),
+
+    #[error("Io error: {0}")]
+    IoError(#[from] std::io::Error),
+
+    #[error("Serde error: {0}")]
+    SerdeError(#[from] serde_json::Error),
 }
 
 impl From<(StatusCode, &str)> for BackendError {

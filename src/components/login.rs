@@ -62,14 +62,12 @@ pub async fn login(username: String, password: Password) -> ServerFnResult {
     use crate::backend::models::users::User;
     use crate::backend::models::users::SESSION_USER_KEY;
     use crate::backend::AppState;
-    use axum::http::StatusCode;
     use axum::Extension;
-    use dioxus::fullstack::server_context;
     use tower_sessions_core::Session;
 
-    let ctx = server_context();
-    let mut p = ctx.status_mut();
-    *p = StatusCode::BAD_GATEWAY;
+    // let ctx = server_context();
+    // let mut p = ctx.status_mut();
+    // *p = StatusCode::BAD_GATEWAY;
 
     let state: Extension<AppState> = extract().await?;
     let db = &state.db;

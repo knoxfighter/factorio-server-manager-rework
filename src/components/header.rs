@@ -1,5 +1,4 @@
 use crate::Route;
-use dioxus::logger::tracing;
 use dioxus::prelude::*;
 use dioxus_primitives::toast::{use_toast, ToastOptions};
 use std::time::Duration;
@@ -21,7 +20,6 @@ pub fn Header() -> Element {
             div {
                 button {
                     onclick: move |_| async move {
-                        let r = logout().await;
                         if let Err(e) = logout().await {
                             toast_api
                                 .error(
