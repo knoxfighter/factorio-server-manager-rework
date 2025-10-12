@@ -68,18 +68,31 @@ pub fn NewInstance() -> Element {
                         SelectValue {}
                     }
                     SelectList { class: "select-list", aria_label: "Select Version",
-                        SelectGroup { class: "select-group",
-                            // SelectGroupLabel { class: "select-group-label", "Fruits" }
-                            {versions}
-                        }
+                        // TODO: add current latest version to string
                         SelectGroup { class: "select-group",
                             // SelectGroupLabel { class: "select-group-label", "Other" }
                             SelectOption::<Option<String>> {
                                 class: "select-option",
-                                index: 4usize,
-                                value: None,
-                                text_value: "other",
-                                "Other"
+                                index: versions.len(),
+                                value: "latest",
+                                text_value: "latest",
+                                "latest"
+                                SelectItemIndicator {
+                                    svg {
+                                        class: "select-check-icon",
+                                        view_box: "0 0 24 24",
+                                        xmlns: "http://www.w3.org/2000/svg",
+                                        path { d: "M5 13l4 4L19 7" }
+                                    }
+                                }
+                            }
+                            // TODO: add current stable version to string
+                            SelectOption::<Option<String>> {
+                                class: "select-option",
+                                index: versions.len(),
+                                value: "stable",
+                                text_value: "stable",
+                                "stable"
                                 SelectItemIndicator {
                                     svg {
                                         class: "select-check-icon",
@@ -90,6 +103,10 @@ pub fn NewInstance() -> Element {
                                 }
                             }
                         }
+                        SelectGroup { class: "select-group",
+                            // SelectGroupLabel { class: "select-group-label", "Fruits" }
+                            {versions}
+                        }
                     }
                 }
                 input { name: "Create", r#type: "submit", value: "Create" }
@@ -99,10 +116,10 @@ pub fn NewInstance() -> Element {
 }
 
 #[get("/api/factorio_versions", state: axum::Extension<crate::backend::AppState>)]
-async fn get_factorio_versions() -> ServerFnResult<Vec<String>> {
+async fn get_factorio_versions() -> ServerFnResult<Vec<[u16; 3]>> {
     use crate::backend::error::BackendError;
     
     let versions = state.manager.cache().get_available_versions().await.map_err(BackendError::from)?;
     
-    Ok(versions.keys().map(|v| v.to_string()).collect())
+    Ok(versions.keys().map(|v| (*v).into()).collect())
 }
