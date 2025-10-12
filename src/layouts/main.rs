@@ -8,11 +8,15 @@ pub fn MainLayout() -> Element {
     let nav = navigator();
 
     let login = use_server_future(check_login)?;
-    let v = login.value();
-    let v = v.unwrap();
-    if v.is_err() {
-        nav.push(Route::Login {});
-    }
+
+    use_effect(move || {
+        let val = login();
+        // let v = login.value();
+        // let v = v.unwrap();
+        if val.is_some() && val.unwrap().is_err() {
+            nav.push(Route::Login {});
+        }
+    });
 
     rsx! {
         Header {}
@@ -23,10 +27,10 @@ pub fn MainLayout() -> Element {
     }
 }
 
-#[server]
+#[get("/api/check_login", _user: crate::backend::models::users::User)]
 pub async fn check_login() -> ServerFnResult {
-    use crate::backend::models::users::User;
-    let _: User = extract().await?;
+    // use crate::backend::models::users::User;
+    // let _: User = extract().await?;
 
     Ok(())
 }

@@ -1,4 +1,5 @@
 use crate::backend::config::Config;
+use crate::backend::error::BackendError;
 use crate::backend::models::users::User;
 use crate::App;
 use axum::Extension;
@@ -6,11 +7,12 @@ use diesel::SqliteConnection;
 use diesel_async::pooled_connection::bb8::{Pool, PooledConnection};
 use diesel_async::pooled_connection::AsyncDieselConnectionManager;
 use diesel_async::sync_connection_wrapper::SyncConnectionWrapper;
+use diesel_async::AsyncMigrationHarness;
+use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 use dioxus::logger::tracing::dispatcher::SetGlobalDefaultError;
 use dioxus::logger::tracing::subscriber::set_global_default;
 use dioxus::logger::tracing::Level;
-use dioxus::prelude::DioxusRouterExt;
-use dioxus_fullstack::ServeConfig;
+use dioxus::prelude::{DioxusRouterExt, ServeConfig};
 use factorio_server::manager::Manager;
 use std::sync::Arc;
 use time::Duration;
@@ -64,6 +66,10 @@ pub async fn launch() {
 
     let pool = establish_db_connection(&config).await;
 
+    run_db_migrations(&pool).await.unwrap();
+    // let mut harness = AsyncMigrationHarness::new((&pool).get_owned().await.unwrap());
+    // harness.run_pending_migrations(MIGRATIONS).unwrap();
+
     // assure that at least one user exists
     User::assure_admin_user(&pool).await.unwrap();
 
@@ -99,6 +105,17 @@ pub async fn launch() {
 async fn establish_db_connection(config: &Config) -> DbPool {
     let manager =
         AsyncDieselConnectionManager::<SyncConnectionWrapper<SqliteConnection>>::new(&config.database_file);
+
     let pool: DbPool = Pool::builder().build(manager).await.unwrap();
     pool
+}
+
+pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!("./migrations");
+
+async fn run_db_migrations(db: &DbPool) -> Result<(), BackendError>{
+    let conn = db.get_owned().await?;
+    let mut conn = AsyncMigrationHarness::new(conn);
+    conn.run_pending_migrations(MIGRATIONS).unwrap();
+
+    Ok(())
 }

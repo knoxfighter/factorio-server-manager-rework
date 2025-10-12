@@ -13,6 +13,7 @@ use diesel::ExpressionMethods;
 use diesel::QueryDsl;
 use diesel::{Queryable, QueryableByName, Selectable, SelectableHelper};
 use diesel_async::RunQueryDsl;
+use dioxus::server::ServerFnError;
 use rand::distr::Alphanumeric;
 use rand::Rng;
 use tower_sessions_core::Session;
@@ -147,21 +148,24 @@ where
     S: Send + Sync,
 {
     // type Rejection = (StatusCode, &'static str);
-    type Rejection = BackendError;
+    type Rejection = ServerFnError;
 
     // TODO: change to return proper BackendErrors
     async fn from_request_parts(parts: &mut Parts, state: &S) -> Result<Self, Self::Rejection> {
-        let session = Session::from_request_parts(parts, state).await?;
+        let session = Session::from_request_parts(parts, state).await.map_err(BackendError::from)?;
         let user_id: String = session
             .get(SESSION_USER_KEY)
-            .await?
-            .ok_or((StatusCode::UNAUTHORIZED, "not logged in"))?;
+            .await
+            .map_err(BackendError::from)?
+            .ok_or((StatusCode::UNAUTHORIZED, "not logged in"))
+            .map_err(BackendError::from)?;
 
-        let Extension(state) = parts.extract::<Extension<AppState>>().await?;
+        let Extension(state) = parts.extract::<Extension<AppState>>().await.map_err(BackendError::from)?;
 
         let user = Self::get_by_uuid(&state.db, &user_id)
             .await
-            .map_err(|_| (StatusCode::UNAUTHORIZED, "user not found"))?;
+            .map_err(|_| (StatusCode::UNAUTHORIZED, "user not found"))
+            .map_err(BackendError::from)?;
 
         Ok(user)
     }

@@ -1,4 +1,3 @@
-use dioxus::logger::tracing;
 use dioxus::prelude::*;
 use dioxus_primitives::select::*;
 
@@ -26,7 +25,27 @@ pub fn NewInstance() -> Element {
     });
 
     let versions = use_server_future(get_factorio_versions)?;
-    tracing::debug!("{:#?}", versions);
+    let mut versions = versions().unwrap()?;
+    versions.sort_by(|a, b| b.cmp(a));
+    let versions = versions.iter().enumerate().map(|(index, version)| {
+        rsx! {
+            SelectOption::<Option<String>> {
+                class: "select-option",
+                index,
+                value: version.clone(),
+                text_value: version.clone(),
+                {version.clone()}
+                SelectItemIndicator {
+                    svg {
+                        class: "select-check-icon",
+                        view_box: "0 0 24 24",
+                        xmlns: "http://www.w3.org/2000/svg",
+                        path { d: "M5 13l4 4L19 7" }
+                    }
+                }
+            }
+        }
+    });
 
     rsx! {
         div {
@@ -48,13 +67,13 @@ pub fn NewInstance() -> Element {
                         aria_label: "Select Trigger",
                         SelectValue {}
                     }
-                    SelectList { class: "select-list", aria_label: "Select Demo",
+                    SelectList { class: "select-list", aria_label: "Select Version",
                         SelectGroup { class: "select-group",
-                            SelectGroupLabel { class: "select-group-label", "Fruits" }
-                            {fruits}
+                            // SelectGroupLabel { class: "select-group-label", "Fruits" }
+                            {versions}
                         }
                         SelectGroup { class: "select-group",
-                            SelectGroupLabel { class: "select-group-label", "Other" }
+                            // SelectGroupLabel { class: "select-group-label", "Other" }
                             SelectOption::<Option<String>> {
                                 class: "select-option",
                                 index: 4usize,
@@ -73,24 +92,17 @@ pub fn NewInstance() -> Element {
                         }
                     }
                 }
-                label {
-                    "Factorio Version"
-                    input { name: "Factorio Version" }
-                }
                 input { name: "Create", r#type: "submit", value: "Create" }
             }
         }
     }
 }
 
-#[server]
+#[get("/api/factorio_versions", state: axum::Extension<crate::backend::AppState>)]
 async fn get_factorio_versions() -> ServerFnResult<Vec<String>> {
-    use crate::backend::AppState;
-    use axum::Extension;
+    use crate::backend::error::BackendError;
     
-    let state: Extension<AppState> = extract().await?;
-
-    let versions = state.manager.cache().get_available_versions().await?;
+    let versions = state.manager.cache().get_available_versions().await.map_err(BackendError::from)?;
     
     Ok(versions.keys().map(|v| v.to_string()).collect())
 }

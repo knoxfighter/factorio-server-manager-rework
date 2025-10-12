@@ -24,7 +24,7 @@ pub fn RootLayout() -> Element {
 
         ErrorBoundary {
             handle_error: move |err: ErrorContext| {
-                err.errors()
+                err.error()
                     .iter()
                     .for_each(|e| {
                         toast_api.error(e.to_string(), ToastOptions::new());

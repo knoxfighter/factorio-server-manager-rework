@@ -1,10 +1,11 @@
-use crate::backend::error::BackendError::AxumRejection;
+use crate::backend::error::BackendError::{AxumRejection, SessionError};
 use axum::body::Body;
 use axum::extract::rejection::ExtensionRejection;
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use diesel_async::pooled_connection::bb8::RunError;
 use dioxus::logger::tracing;
+use dioxus::server::ServerFnError;
 use thiserror::Error;
 
 // TODO: Adjust strings so they can be shown to the user
@@ -39,6 +40,9 @@ pub enum BackendError {
 
     #[error("Serde error: {0}")]
     SerdeError(#[from] serde_json::Error),
+
+    #[error("Factorio Server Crate Error: {0}")]
+    FactorioServerCrateError(#[from] factorio_server::error::ServerError),
 }
 
 impl From<(StatusCode, &str)> for BackendError {
@@ -47,12 +51,33 @@ impl From<(StatusCode, &str)> for BackendError {
     }
 }
 
+impl From<BackendError> for ServerFnError {
+    fn from(value: BackendError) -> Self {
+        ServerFnError::ServerError {
+            message: value.to_string(),
+            code: Some(StatusCode::from(value).as_u16()),
+            details: None,
+        }
+    }
+}
+
+impl From<BackendError> for StatusCode {
+    fn from(value: BackendError) -> Self {
+        match value {
+            AxumRejection(code, _) => code,
+            SessionError(_) => StatusCode::UNAUTHORIZED,
+            BackendError::PasswordHashError(_) => StatusCode::UNAUTHORIZED,
+            _ => StatusCode::INTERNAL_SERVER_ERROR,
+        }
+    }
+}
+
 impl IntoResponse for BackendError {
     fn into_response(self) -> Response {
         // This code is not called when using dioxus internal systems.
         // It gets converted to a ServerFnError and then to a Response.
 
-        tracing::debug!("IntoResponse for BackendError");
+        tracing::error!("IntoResponse for BackendError");
         Response::builder()
             .status(StatusCode::INTERNAL_SERVER_ERROR)
             .body(Body::from(self.to_string()))
