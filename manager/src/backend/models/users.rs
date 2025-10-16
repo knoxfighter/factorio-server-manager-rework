@@ -152,7 +152,9 @@ where
 
     // TODO: change to return proper BackendErrors
     async fn from_request_parts(parts: &mut Parts, state: &S) -> Result<Self, Self::Rejection> {
-        let session = Session::from_request_parts(parts, state).await.map_err(BackendError::from)?;
+        let session = Session::from_request_parts(parts, state)
+            .await
+            .map_err(BackendError::from)?;
         let user_id: String = session
             .get(SESSION_USER_KEY)
             .await
@@ -160,7 +162,10 @@ where
             .ok_or((StatusCode::UNAUTHORIZED, "not logged in"))
             .map_err(BackendError::from)?;
 
-        let Extension(state) = parts.extract::<Extension<AppState>>().await.map_err(BackendError::from)?;
+        let Extension(state) = parts
+            .extract::<Extension<AppState>>()
+            .await
+            .map_err(BackendError::from)?;
 
         let user = Self::get_by_uuid(&state.db, &user_id)
             .await

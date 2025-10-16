@@ -42,16 +42,17 @@ impl Config {
         let envs = ConfigOption::from_env();
         let args = ConfigOption::parse();
 
-        let conf = args.conf.as_ref().unwrap_or_else(|| envs.conf.as_ref().unwrap_or(&default.conf));
+        let conf = args
+            .conf
+            .as_ref()
+            .unwrap_or_else(|| envs.conf.as_ref().unwrap_or(&default.conf));
 
         let json = match conf.exists() {
             true => {
                 let file = File::open(conf)?;
                 serde_json::from_reader(file)?
             }
-            false => {
-                Default::default()
-            }
+            false => Default::default(),
         };
 
         Ok(default.merge(json).merge(envs).merge(args))

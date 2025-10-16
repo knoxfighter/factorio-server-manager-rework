@@ -39,10 +39,13 @@ pub fn Header() -> Element {
 
 #[post("/api/logout", session: tower_sessions_core::Session)]
 pub async fn logout() -> ServerFnResult {
-    use crate::backend::models::users::SESSION_USER_KEY;
     use crate::backend::error::BackendError;
+    use crate::backend::models::users::SESSION_USER_KEY;
 
-    session.remove::<String>(SESSION_USER_KEY).await.map_err(BackendError::from)?;
+    session
+        .remove::<String>(SESSION_USER_KEY)
+        .await
+        .map_err(BackendError::from)?;
 
     Ok(())
 }

@@ -55,7 +55,7 @@ impl From<BackendError> for ServerFnError {
     fn from(value: BackendError) -> Self {
         ServerFnError::ServerError {
             message: value.to_string(),
-            code: Some(StatusCode::from(value).as_u16()),
+            code: StatusCode::from(value).as_u16(),
             details: None,
         }
     }

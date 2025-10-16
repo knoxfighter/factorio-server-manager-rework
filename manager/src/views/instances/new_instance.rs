@@ -1,5 +1,7 @@
+use dioxus::logger::tracing;
 use dioxus::prelude::*;
 use dioxus_primitives::select::*;
+use factorio_version::Version;
 
 #[component]
 pub fn NewInstance() -> Element {
@@ -29,12 +31,12 @@ pub fn NewInstance() -> Element {
     versions.sort_by(|a, b| b.cmp(a));
     let versions = versions.iter().enumerate().map(|(index, version)| {
         rsx! {
-            SelectOption::<Option<String>> {
+            SelectOption::<String> {
                 class: "select-option",
                 index,
-                value: version.clone(),
-                text_value: version.clone(),
-                {version.clone()}
+                value: version.to_string(),
+                text_value: version.to_string(),
+                {version.to_string()}
                 SelectItemIndicator {
                     svg {
                         class: "select-check-icon",
@@ -47,20 +49,34 @@ pub fn NewInstance() -> Element {
         }
     });
 
+    let mut selected_version = use_signal(|| "stable".to_string());
+
     rsx! {
         div {
             form {
-                onsubmit: move |event| {
+                onsubmit: move |event: Event<FormData>| {
                     event.prevent_default();
+                    tracing::info!("submit: {event:?} - {selected_version}");
+                    let t = match event.get_first("name").unwrap() {
+                        FormValue::Text(t) => Ok(t),
+                        FormValue::File(_) => Err("test".to_string()),
+                    }
+                        .unwrap();
+                    Ok(())
                 },
                 label {
                     "Name"
-                    input { name: "Name" }
+                    input { name: "name" }
                 }
-                Select::<Option<String>> {
+                Select::<String> {
                     width: "12rem",
                     class: "select",
                     placeholder: "Select Factorio Version",
+                    name: "version",
+                    default_value: selected_version(),
+                    on_value_change: move |value: Option<String>| {
+                        selected_version.set(value.unwrap());
+                    },
                     SelectTrigger {
                         class: "select-trigger",
                         width: "12rem",
@@ -71,7 +87,7 @@ pub fn NewInstance() -> Element {
                         // TODO: add current latest version to string
                         SelectGroup { class: "select-group",
                             // SelectGroupLabel { class: "select-group-label", "Other" }
-                            SelectOption::<Option<String>> {
+                            SelectOption::<String> {
                                 class: "select-option",
                                 index: versions.len(),
                                 value: "latest",
@@ -87,7 +103,7 @@ pub fn NewInstance() -> Element {
                                 }
                             }
                             // TODO: add current stable version to string
-                            SelectOption::<Option<String>> {
+                            SelectOption::<String> {
                                 class: "select-option",
                                 index: versions.len(),
                                 value: "stable",
@@ -116,10 +132,15 @@ pub fn NewInstance() -> Element {
 }
 
 #[get("/api/factorio_versions", state: axum::Extension<crate::backend::AppState>)]
-async fn get_factorio_versions() -> ServerFnResult<Vec<[u16; 3]>> {
+async fn get_factorio_versions() -> ServerFnResult<Vec<Version>> {
     use crate::backend::error::BackendError;
-    
-    let versions = state.manager.cache().get_available_versions().await.map_err(BackendError::from)?;
-    
+
+    let versions = state
+        .manager
+        .cache()
+        .get_available_versions()
+        .await
+        .map_err(BackendError::from)?;
+
     Ok(versions.keys().map(|v| (*v).into()).collect())
 }

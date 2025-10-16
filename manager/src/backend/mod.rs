@@ -20,10 +20,10 @@ use tower::ServiceBuilder;
 use tower_sessions::{MemoryStore, SessionManagerLayer};
 use tower_sessions_core::Expiry;
 
+mod config;
 pub mod error;
 pub mod models;
 pub mod schema;
-mod config;
 
 pub type DbPool = Pool<SyncConnectionWrapper<SqliteConnection>>;
 pub type DbPoolConnection<'a> =
@@ -88,10 +88,14 @@ pub async fn launch() {
 
     let addr = dioxus::cli_config::fullstack_address_or_localhost();
 
-    let state = AppState { db: pool, manager: Arc::new(Manager::new(&config.manager_path).unwrap()), config };
+    let state = AppState {
+        db: pool,
+        manager: Arc::new(Manager::new(&config.manager_path).unwrap()),
+        config,
+    };
 
     let app = axum::Router::new()
-        .serve_dioxus_application(ServeConfig::new().unwrap(), App)
+        .serve_dioxus_application(ServeConfig::new(), App)
         .layer(
             ServiceBuilder::new()
                 .layer(session_manager)
@@ -103,8 +107,9 @@ pub async fn launch() {
 }
 
 async fn establish_db_connection(config: &Config) -> DbPool {
-    let manager =
-        AsyncDieselConnectionManager::<SyncConnectionWrapper<SqliteConnection>>::new(&config.database_file);
+    let manager = AsyncDieselConnectionManager::<SyncConnectionWrapper<SqliteConnection>>::new(
+        &config.database_file,
+    );
 
     let pool: DbPool = Pool::builder().build(manager).await.unwrap();
     pool
@@ -112,7 +117,7 @@ async fn establish_db_connection(config: &Config) -> DbPool {
 
 pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!("./migrations");
 
-async fn run_db_migrations(db: &DbPool) -> Result<(), BackendError>{
+async fn run_db_migrations(db: &DbPool) -> Result<(), BackendError> {
     let conn = db.get_owned().await?;
     let mut conn = AsyncMigrationHarness::new(conn);
     conn.run_pending_migrations(MIGRATIONS).unwrap();

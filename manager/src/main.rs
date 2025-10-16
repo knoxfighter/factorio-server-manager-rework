@@ -6,12 +6,12 @@ use dioxus_primitives::toast::ToastProvider;
 use layouts::main::MainLayout;
 use layouts::root::RootLayout;
 
-mod components;
-mod layouts;
-mod views;
 #[cfg(feature = "server")]
 mod backend;
+mod components;
+mod layouts;
 pub mod password;
+mod views;
 
 #[derive(Debug, Clone, Routable, PartialEq)]
 #[rustfmt::skip]
