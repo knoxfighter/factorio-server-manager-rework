@@ -1,7 +1,7 @@
 use dioxus::logger::tracing;
 use dioxus::prelude::*;
-use dioxus_primitives::select::*;
 use factorio_version::Version;
+use crate::components::select::*;
 
 #[component]
 pub fn NewInstance() -> Element {
@@ -14,14 +14,7 @@ pub fn NewInstance() -> Element {
                 value: *fruit,
                 text_value: *fruit,
                 {fruit.to_string()}
-                SelectItemIndicator {
-                    svg {
-                        class: "select-check-icon",
-                        view_box: "0 0 24 24",
-                        xmlns: "http://www.w3.org/2000/svg",
-                        path { d: "M5 13l4 4L19 7" }
-                    }
-                }
+                SelectItemIndicator {}
             }
         }
     });
@@ -37,14 +30,7 @@ pub fn NewInstance() -> Element {
                 value: version.to_string(),
                 text_value: version.to_string(),
                 {version.to_string()}
-                SelectItemIndicator {
-                    svg {
-                        class: "select-check-icon",
-                        view_box: "0 0 24 24",
-                        xmlns: "http://www.w3.org/2000/svg",
-                        path { d: "M5 13l4 4L19 7" }
-                    }
-                }
+                SelectItemIndicator {}
             }
         }
     });
@@ -93,14 +79,7 @@ pub fn NewInstance() -> Element {
                                 value: "latest",
                                 text_value: "latest",
                                 "latest"
-                                SelectItemIndicator {
-                                    svg {
-                                        class: "select-check-icon",
-                                        view_box: "0 0 24 24",
-                                        xmlns: "http://www.w3.org/2000/svg",
-                                        path { d: "M5 13l4 4L19 7" }
-                                    }
-                                }
+                                SelectItemIndicator {}
                             }
                             // TODO: add current stable version to string
                             SelectOption::<String> {
@@ -109,14 +88,7 @@ pub fn NewInstance() -> Element {
                                 value: "stable",
                                 text_value: "stable",
                                 "stable"
-                                SelectItemIndicator {
-                                    svg {
-                                        class: "select-check-icon",
-                                        view_box: "0 0 24 24",
-                                        xmlns: "http://www.w3.org/2000/svg",
-                                        path { d: "M5 13l4 4L19 7" }
-                                    }
-                                }
+                                SelectItemIndicator {}
                             }
                         }
                         SelectGroup { class: "select-group",

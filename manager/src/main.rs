@@ -2,9 +2,9 @@ use crate::components::echo::Echo;
 use crate::views::login::Login;
 use crate::views::instances::new_instance::NewInstance;
 use dioxus::prelude::*;
-use dioxus_primitives::toast::ToastProvider;
 use layouts::main::MainLayout;
 use layouts::root::RootLayout;
+use crate::components::toast::ToastProvider;
 
 #[cfg(feature = "server")]
 mod backend;
