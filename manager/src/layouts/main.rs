@@ -29,9 +29,6 @@ pub fn MainLayout() -> Element {
 
 #[get("/api/check_login", _user: crate::backend::models::users::User)]
 pub async fn check_login() -> ServerFnResult {
-    // use crate::backend::models::users::User;
-    // let _: User = extract().await?;
-
     Ok(())
 }
 

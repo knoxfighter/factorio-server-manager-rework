@@ -12,6 +12,7 @@ use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 use dioxus::logger::tracing::dispatcher::SetGlobalDefaultError;
 use dioxus::logger::tracing::subscriber::set_global_default;
 use dioxus::logger::tracing::Level;
+use dioxus::logger::tracing;
 use dioxus::prelude::{DioxusRouterExt, ServeConfig};
 use factorio_server::manager::Manager;
 use std::sync::Arc;
@@ -67,8 +68,6 @@ pub async fn launch() {
     let pool = establish_db_connection(&config).await;
 
     run_db_migrations(&pool).await.unwrap();
-    // let mut harness = AsyncMigrationHarness::new((&pool).get_owned().await.unwrap());
-    // harness.run_pending_migrations(MIGRATIONS).unwrap();
 
     // assure that at least one user exists
     User::assure_admin_user(&pool).await.unwrap();

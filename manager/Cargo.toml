@@ -7,9 +7,9 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-dioxus = { version = "0.7.0-rc.2", features = ["router", "fullstack"] }
-dioxus-fullstack = "0.7.0-rc.2"
-dioxus-cli-config = "0.7.0-rc.2"
+dioxus = { version = "0.7.0-rc.3", features = ["router", "fullstack"] }
+dioxus-fullstack = "0.7.0-rc.3"
+dioxus-cli-config = "0.7.0-rc.3"
 dioxus-primitives = { git = "https://github.com/DioxusLabs/components" }
 
 # has to be optional so it is server only

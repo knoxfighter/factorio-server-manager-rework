@@ -58,7 +58,6 @@ pub fn Login() -> Element {
                 }
 
                 input { r#type: "submit", value: "Login" }
-
                 if let Some(err) = login_error() {
                     div { "{err}" }
                 }
