@@ -2,8 +2,6 @@ use crate::backend::error::BackendError;
 use crate::backend::schema::users;
 use crate::backend::{AppState, DbPool};
 use crate::password::Password;
-use argon2::password_hash::rand_core::OsRng;
-use argon2::password_hash::SaltString;
 use argon2::{Argon2, PasswordHash, PasswordHasher, PasswordVerifier};
 use axum::extract::FromRequestParts;
 use axum::http::request::Parts;
@@ -14,8 +12,7 @@ use diesel::QueryDsl;
 use diesel::{Queryable, QueryableByName, Selectable, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use dioxus::server::ServerFnError;
-use rand::distr::Alphanumeric;
-use rand::Rng;
+use rand::distr::{Alphanumeric, SampleString};
 use tower_sessions_core::Session;
 use uuid::Uuid;
 
@@ -66,9 +63,8 @@ impl User {
     ) -> Result<Self, BackendError> {
         let mut conn = db.get().await?;
 
-        let salt = SaltString::try_from_rng(&mut OsRng)?;
         let password = Argon2::default()
-            .hash_password(password.as_ref().as_bytes(), &salt)?
+            .hash_password(password.as_ref().as_bytes())?
             .to_string();
 
         let uuid = Uuid::new_v4().to_string();
@@ -113,12 +109,7 @@ impl User {
             return Ok(());
         }
 
-        let password: Password = rand::rng()
-            .sample_iter(&Alphanumeric)
-            .take(16)
-            .map(char::from)
-            .collect::<String>()
-            .into();
+        let password: Password = Alphanumeric.sample_string(&mut rand::rng(), 16).into();
 
         let user = Self::create(db, "admin", password.clone()).await?;
 

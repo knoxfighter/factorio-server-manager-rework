@@ -12,7 +12,6 @@ use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 use dioxus::logger::tracing::dispatcher::SetGlobalDefaultError;
 use dioxus::logger::tracing::subscriber::set_global_default;
 use dioxus::logger::tracing::Level;
-use dioxus::logger::tracing;
 use dioxus::prelude::{DioxusRouterExt, ServeConfig};
 use factorio_server::manager::Manager;
 use std::sync::Arc;

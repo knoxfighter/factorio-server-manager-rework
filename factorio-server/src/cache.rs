@@ -341,11 +341,7 @@ impl Cache {
 
         let mut dir_reader = tokio::fs::read_dir(&self.factorio_dir).await?;
         while let Some(file) = dir_reader.next_entry().await? {
-            let name: Version = file
-                .file_name()
-                .to_str()
-                .unwrap()
-                .parse()?;
+            let name: Version = file.file_name().to_str().unwrap().parse()?;
             let value = versions.entry(name).or_insert((false, true));
             value.1 = true;
         }
@@ -368,12 +364,7 @@ impl Cache {
                 "href link is wrongly formatted".to_string(),
             ))?;
 
-            let value = versions
-                .entry(
-                    version
-                        .parse()?,
-                )
-                .or_insert((false, false));
+            let value = versions.entry(version.parse()?).or_insert((false, false));
             value.0 = true;
         }
 

@@ -1,10 +1,10 @@
 use crate::components::echo::Echo;
-use crate::views::login::Login;
+use crate::components::toast::ToastProvider;
 use crate::views::instances::new_instance::NewInstance;
+use crate::views::login::Login;
 use dioxus::prelude::*;
 use layouts::main::MainLayout;
 use layouts::root::RootLayout;
-use crate::components::toast::ToastProvider;
 
 #[cfg(feature = "server")]
 mod backend;

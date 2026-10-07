@@ -20,8 +20,8 @@ pub enum BackendError {
     #[error("Argon2 error: {0}")]
     Argon2Error(#[from] argon2::Error),
 
-    #[error("OsRng error: {0}")]
-    OsRngError(#[from] argon2::password_hash::rand_core::OsError),
+    #[error("Password Hashing error: {0}")]
+    PasswordHashingError(#[from] argon2::password_hash::phc::Error),
 
     #[error("Password Hash error: {0}")]
     PasswordHashError(#[from] argon2::password_hash::Error),

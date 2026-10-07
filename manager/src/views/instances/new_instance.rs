@@ -1,7 +1,7 @@
+use crate::components::select::*;
 use dioxus::logger::tracing;
 use dioxus::prelude::*;
 use factorio_version::Version;
-use crate::components::select::*;
 
 #[component]
 pub fn NewInstance() -> Element {
@@ -57,7 +57,6 @@ pub fn NewInstance() -> Element {
                 Select::<String> {
                     width: "12rem",
                     class: "select",
-                    placeholder: "Select Factorio Version",
                     name: "version",
                     default_value: selected_version(),
                     on_value_change: move |value: Option<String>| {
@@ -67,7 +66,7 @@ pub fn NewInstance() -> Element {
                         class: "select-trigger",
                         width: "12rem",
                         aria_label: "Select Trigger",
-                        SelectValue {}
+                        SelectValue { placeholder: "Select Factorio Version" }
                     }
                     SelectList { class: "select-list", aria_label: "Select Version",
                         // TODO: add current latest version to string
